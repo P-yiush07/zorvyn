@@ -20,7 +20,7 @@ services:
       - "8080:8080"
     environment:
       PORT: 8080
-      DATABASE_URL: mongodb+srv://chikukumar1967_db_user:hV1NyTdQBDhfELFZ@cluster0.hkynrmi.mongodb.net/zorvyn?retryWrites=true&w=majority&appName=Cluster0
+      DATABASE_URL: 
       JWT_SECRET: 12313
       JWT_EXPIRES_IN: 1d
       REFRESH_JWT_SECRET: 1323213
