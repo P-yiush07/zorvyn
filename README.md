@@ -53,28 +53,28 @@ NestJS backend assignment implementation for a finance dashboard system with RBA
 ## API Endpoints
 
 ### Auth
-- `POST /auth/register` (first user bootstrap, first user becomes ADMIN)
-- `POST /auth/login`
-- `POST /auth/refresh` (rotate access/refresh tokens)
-- `POST /auth/change-password` (protected, invalidates refresh sessions)
+- `POST /api/v1/auth/register` (first user bootstrap, first user becomes ADMIN)
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh` (rotate access/refresh tokens)
+- `POST /api/v1/auth/change-password` (protected, invalidates refresh sessions)
 
 ### Users (ADMIN only)
-- `POST /users`
-- `GET /users`
-- `PATCH /users/:id`
+- `POST /api/v1/users`
+- `GET /api/v1/users`
+- `PATCH /api/v1/users/:id`
 
 ### Records
-- `POST /records` (ADMIN)
-- `GET /records` (ANALYST, ADMIN)
-- `GET /records/:id` (ANALYST, ADMIN)
-- `PATCH /records/:id` (ADMIN)
-- `DELETE /records/:id` (ADMIN, soft delete)
+- `POST /api/v1/records` (ADMIN)
+- `GET /api/v1/records` (ANALYST, ADMIN)
+- `GET /api/v1/records/:id` (ANALYST, ADMIN)
+- `PATCH /api/v1/records/:id` (ADMIN)
+- `DELETE /api/v1/records/:id` (ADMIN, soft delete)
 
 ### Dashboard
-- `GET /dashboard/summary` (VIEWER, ANALYST, ADMIN)
-- `GET /dashboard/category-totals` (ANALYST, ADMIN)
-- `GET /dashboard/recent-activity` (VIEWER, ANALYST, ADMIN)
-- `GET /dashboard/trends?range=weekly|monthly` (ANALYST, ADMIN)
+- `GET /api/v1/dashboard/summary` (VIEWER, ANALYST, ADMIN)
+- `GET /api/v1/dashboard/category-totals` (ANALYST, ADMIN)
+- `GET /api/v1/dashboard/recent-activity` (VIEWER, ANALYST, ADMIN)
+- `GET /api/v1/dashboard/trends?range=weekly|monthly` (ANALYST, ADMIN)
 
 ## Setup
 
@@ -126,6 +126,12 @@ To stop and remove DB volume:
 docker compose down -v
 ```
 
+
+## Health Check
+
+- Endpoint: `GET /api/v1/health`
+- Purpose: Quick readiness check for local/dev/deploy verification.
+
 ## Swagger API Docs
 
 - URL: `http://localhost:<PORT>/api/docs` (example: `http://localhost:8080/api/docs`)
@@ -139,7 +145,7 @@ Use this exact sequence if protected APIs are returning `401`/`403`:
 1. Register the first user (auto ADMIN):
 
 ```bash
-curl -X POST http://localhost:8080/auth/register \
+curl -X POST http://localhost:8080/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "admin@finance.local",
@@ -151,7 +157,7 @@ curl -X POST http://localhost:8080/auth/register \
 2. Login and copy `accessToken` from response:
 
 ```bash
-curl -X POST http://localhost:8080/auth/login \
+curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "admin@finance.local",
@@ -162,7 +168,7 @@ curl -X POST http://localhost:8080/auth/login \
 3. Use token to create a new user (ADMIN endpoint):
 
 ```bash
-curl -X POST http://localhost:8080/users \
+curl -X POST http://localhost:8080/api/v1/users \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <paste_access_token_here>" \
   -d '{
@@ -235,5 +241,5 @@ Covered areas:
 1. Start app and open Swagger at `http://localhost:8080/api/docs`.
 2. Register first user and login to get JWT token.
 3. Click **Authorize** and set `Bearer <token>`.
-4. Create a record (`POST /records`) and verify it appears in `GET /records`.
-5. Check dashboard aggregation from `GET /dashboard/summary`.
+4. Create a record (`POST /api/v1/records`) and verify it appears in `GET /api/v1/records`.
+5. Check dashboard aggregation from `GET /api/v1/dashboard/summary`.

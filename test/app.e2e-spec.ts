@@ -1,7 +1,14 @@
-import { INestApplication } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  VersioningType,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
+import { LoggingInterceptor } from '../src/common/interceptors/logging.interceptor';
+import { ResponseInterceptor } from '../src/common/interceptors/response.interceptor';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 type UserRecord = {
@@ -132,6 +139,19 @@ describe('AppController (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api');
+    app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        transformOptions: { enableImplicitConversion: true },
+      }),
+    );
+    app.useGlobalFilters(new HttpExceptionFilter());
+    app.useGlobalInterceptors(new LoggingInterceptor());
+    app.useGlobalInterceptors(new ResponseInterceptor());
     await app.init();
   });
 
@@ -143,7 +163,7 @@ describe('AppController (e2e)', () => {
     const server = app.getHttpServer() as Parameters<typeof request>[0];
 
     const registerRes = await request(server)
-      .post('/auth/register')
+      .post('/api/v1/auth/register')
       .send({
         email: 'admin@finance.local',
         password: 'StrongPass123',
@@ -151,23 +171,23 @@ describe('AppController (e2e)', () => {
       })
       .expect(201);
 
-    const registerBody = registerRes.body as { email: string };
-    expect(registerBody.email).toBe('admin@finance.local');
+    const registerBody = registerRes.body as { data: { email: string } };
+    expect(registerBody.data.email).toBe('admin@finance.local');
 
     const loginRes = await request(server)
-      .post('/auth/login')
+      .post('/api/v1/auth/login')
       .send({
         email: 'admin@finance.local',
         password: 'StrongPass123',
       })
       .expect(200);
 
-    const loginBody = loginRes.body as { accessToken: string };
-    const token = loginBody.accessToken;
+    const loginBody = loginRes.body as { data: { accessToken: string } };
+    const token = loginBody.data.accessToken;
     expect(token).toBeDefined();
 
     await request(server)
-      .post('/records')
+      .post('/api/v1/records')
       .set('Authorization', `Bearer ${token}`)
       .send({
         amount: 1000,
@@ -178,11 +198,11 @@ describe('AppController (e2e)', () => {
       .expect(201);
 
     const summaryRes = await request(server)
-      .get('/dashboard/summary')
+      .get('/api/v1/dashboard/summary')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
-    const summaryBody = summaryRes.body as { totalIncome: number };
-    expect(summaryBody.totalIncome).toBe(1000);
+    const summaryBody = summaryRes.body as { data: { totalIncome: number } };
+    expect(summaryBody.data.totalIncome).toBe(1000);
   });
 });
